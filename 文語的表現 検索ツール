@@ -1,0 +1,2853 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文語的表現 検索ツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        h2 {
+            border-left: 5px solid #005c82;
+            padding-left: 10px;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .panel {
+            background: #fdfdfd;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .search-help {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+            background: #f0f4f8;
+            padding: 10px;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 15px;
+        }
+        .input-box {
+            grid-column: span 4;
+        }
+        .input-box.w-medium {
+            grid-column: span 3;
+        }
+        .input-box.w-small {
+            grid-column: span 3;
+        }
+
+        @media (max-width: 768px) {
+            .input-box, .input-box.w-medium, .input-box.w-small {
+                grid-column: span 12;
+            }
+        }
+
+        .input-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .input-box input[type="text"],
+        .input-box input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .range-container input {
+            flex: 1;
+        }
+        
+        /* チェックボックスセクション */
+        .checkbox-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            background: #f7f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .checkbox-cluster.w-double {
+            grid-column: span var(--span-size, 1);
+        }
+        @media (min-width: 900px) {
+            .checkbox-cluster.w-double {
+                grid-column: span 2;
+            }
+        }
+        
+        .checkbox-cluster {
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #e6eae6;
+            border-radius: 4px;
+            height: fit-content;
+        }
+        .checkbox-cluster p {
+            margin: 0 0 8px 0;
+            font-weight: bold;
+            font-size: 14px;
+            color: #005c82;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bulk-actions {
+            font-size: 11px;
+            font-weight: normal;
+            color: #666;
+        }
+        .bulk-actions span {
+            cursor: pointer;
+            color: #005c82;
+            text-decoration: underline;
+            margin-left: 5px;
+        }
+        .bulk-actions span:hover {
+            color: #004461;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            font-size: 13px;
+        }
+        .checkbox-group label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+        .btn-container {
+            text-align: right;
+            margin-top: 10px;
+        }
+        button {
+            background-color: #005c82;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        button:hover { background-color: #004461; }
+        
+        /* テーブル関連スタイル */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 600px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+        th {
+            background-color: #005c82;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+        th:hover {
+            background-color: #004461;
+        }
+        .sort-arrow {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 11px;
+            color: #99ccff;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>文語的表現 検索ツール</h1>
+    <style>
+        .intro-description {
+            background-color: #fff;
+            border-left: 5px solid #005c82;
+            padding: 15px 20px;
+            margin: 15px 0 25px 0;
+            border-radius: 0 6px 6px 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        .intro-description p {
+            margin: 0 0 10px 0;
+        }
+        .intro-description p:last-child {
+            margin-bottom: 0;
+        }
+        .intro-tag {
+            display: inline-block;
+            background-color: #e0f0f5;
+            color: #005c82;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+    </style>
+
+    <div class="intro-description">
+        <p>
+本ツールは、現代の日常表現や楽曲・書籍で広く用いられている<strong>「文語的表現」</strong>を横断的に検索・分析するために作成されたものです。
+        </p>
+        <p>
+「文語的表現」とは「現代で用いられる語句のうち、古典語・文語の要素(中世以降の擬古文や戦前の文語体で生まれた表現も含む)が確認できるもの」を指します。
+        </p>
+        <p>
+日本語習熟論学会 第５回大会（2026年7月25日,オンライン）において、「『文語的表現』データベース化にあたって」という題で発表した際に試用版を公開しました。
+        </p>
+        <div style="margin-top: 12px;">
+            <span class="intro-tag">日本語学</span>
+            <span class="intro-tag">国語教育</span>
+            <span class="intro-tag">文体</span>
+            <span class="intro-tag">語彙</span>
+        </div>
+    </div>
+    <h2>🔍 検索・フィルター条件</h2>
+    <div class="panel">
+        <div class="search-help">
+            💡 <strong>検索の使い方:</strong><br>
+            ・<span>複数キーワード（AND検索）:</span> 半角スペース区切り（例: 「なき 例」や「しき 例」）<br>
+            ・<span>除外検索（NOT検索）:</span> 単語の前に半角マイナス（例: 「-例」で用例サンプルのない文言のみ抽出）<br>
+            ・<span>ワイルドカード:</span> 「<code>*</code>」で0文字以上、「<code>?</code>」で任意の1文字（例: 「干*」「?す」）<br>
+            ・<span>データ一覧のソート:</span> テーブルの<strong>「列タイトル」をクリック</strong>すると、昇順・降順にデータを並び替えられます。
+        </div>
+
+        <div class="search-section">
+            <div class="grid-inputs" id="searchInputsContainer">
+                <div class="input-box"><label>語句</label><input type="text" id="s_word" placeholder="例: 現る"></div>
+                <div class="input-box"><label>タイトル</label><input type="text" id="s_title" placeholder="例: 夜は短し歩けよ乙女"></div>
+                <div class="input-box w-medium"><label>アーティスト名</label><input type="text" id="s_artist" placeholder="例: Ado"></div>
+                
+                <div class="input-box w-small">
+                    <label>公開年</label>
+                    <div class="range-container">
+                        <input type="number" id="s_yearFrom" placeholder="例: 2000">
+                        <span>～</span>
+                        <input type="number" id="s_yearTo" placeholder="例: 2026">
+                    </div>
+                </div>
+
+                <div class="input-box"><label>作詞者・作者</label><input type="text" id="s_creator" placeholder="例: 田淵智也"></div>
+            </div>
+
+            <div class="checkbox-section">
+                <div class="checkbox-cluster">
+                    <p>
+                        <span>大分類</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-mainCat', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-mainCat', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-mainCat" value="1 文法" checked> 文法</label>
+                        <label><input type="checkbox" class="filter-mainCat" value="2 語彙" checked> 語彙（流行歌のみ）</label>
+                        <label><input type="checkbox" class="filter-mainCat" value="3 仮名遣い" checked> 仮名遣い（流行歌のみ）</label>
+                    </div>
+                </div>
+                <div class="checkbox-cluster">
+                    <p>
+                        <span>品詞</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-part', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-part', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-part" value="動詞" checked> 動詞</label>
+                        <label><input type="checkbox" class="filter-part" value="形容詞" checked> 形容詞</label>
+                        <label><input type="checkbox" class="filter-part" value="形容動詞" checked> 形容動詞</label>
+                        <label><input type="checkbox" class="filter-part" value="名詞" checked> 名詞</label>
+                        <label><input type="checkbox" class="filter-part" value="連体詞" checked> 連体詞</label>
+                        <label><input type="checkbox" class="filter-part" value="副詞" checked> 副詞</label>
+                        <label><input type="checkbox" class="filter-part" value="接続詞" checked> 接続詞</label>
+                        <label><input type="checkbox" class="filter-part" value="感動詞" checked> 感動詞</label>
+                        <label><input type="checkbox" class="filter-part" value="助動詞" checked> 助動詞</label>
+                        <label><input type="checkbox" class="filter-part" value="助詞" checked> 助詞</label>
+                        <label><input type="checkbox" class="filter-part" value="ー" checked> なし(ー)</label>
+                    </div>
+                </div>
+                
+                <div class="checkbox-cluster w-double">
+                    <p>
+                        <span>形式</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-style', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-style', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-style" value="る" checked> る</label>
+<label><input type="checkbox" class="filter-style" value="す" checked> す</label>
+<label><input type="checkbox" class="filter-style" value="しむ" checked> しむ</label>
+<label><input type="checkbox" class="filter-style" value="ず" checked> ず</label>
+<label><input type="checkbox" class="filter-style" value="き" checked> き</label>
+<label><input type="checkbox" class="filter-style" value="けり" checked> けり</label>
+<label><input type="checkbox" class="filter-style" value="つ" checked> つ</label>
+<label><input type="checkbox" class="filter-style" value="ぬ" checked> ぬ</label>
+<label><input type="checkbox" class="filter-style" value="たり(完了)" checked> たり(完了)</label>
+<label><input type="checkbox" class="filter-style" value="り" checked> り</label>
+<label><input type="checkbox" class="filter-style" value="む" checked> む</label>
+<label><input type="checkbox" class="filter-style" value="べし" checked> べし</label>
+<label><input type="checkbox" class="filter-style" value="じ" checked> じ</label>
+<label><input type="checkbox" class="filter-style" value="まじ" checked> まじ</label>
+<label><input type="checkbox" class="filter-style" value="たし" checked> たし</label>
+<label><input type="checkbox" class="filter-style" value="まほし" checked> まほし</label>
+<label><input type="checkbox" class="filter-style" value="なり(断定)" checked> なり(断定)</label>
+<label><input type="checkbox" class="filter-style" value="たり（断定）" checked> たり（断定）</label>
+<label><input type="checkbox" class="filter-style" value="ごとし" checked> ごとし</label>
+<label><input type="checkbox" class="filter-style" value="が(格助詞)" checked> が(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="を(格助詞)" checked> を(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="に(格助詞)" checked> に(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="より(格助詞)" checked> より(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="にて(格助詞)" checked> にて(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="して(格助詞)" checked> して(格助詞)</label>
+<label><input type="checkbox" class="filter-style" value="ば(接続助詞)" checked> ば(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="と(接続助詞)" checked> と(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="とも(接続助詞)" checked> とも(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="ど(接続助詞)" checked> ど(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="ども(接続助詞)" checked> ども(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="に(接続助詞)" checked> に(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="して(接続助詞)" checked> して(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="で(接続助詞)" checked> で(接続助詞)</label>
+<label><input type="checkbox" class="filter-style" value="こそ(係助詞)" checked> こそ(係助詞)</label>
+<label><input type="checkbox" class="filter-style" value="ぞ(係助詞)" checked> ぞ(係助詞)</label>
+<label><input type="checkbox" class="filter-style" value="や(係助詞)" checked> や(係助詞)</label>
+<label><input type="checkbox" class="filter-style" value="だに(副助詞)" checked> だに(副助詞)</label>
+<label><input type="checkbox" class="filter-style" value="し(副助詞)" checked> し(副助詞)</label>
+<label><input type="checkbox" class="filter-style" value="もがな(終助詞)" checked> もがな(終助詞)</label>
+<label><input type="checkbox" class="filter-style" value="かし(終助詞)" checked> かし(終助詞)</label>
+<label><input type="checkbox" class="filter-style" value="や(間投助詞)" checked> や(間投助詞)</label>
+<label><input type="checkbox" class="filter-style" value="ー" checked> ー</label>
+                    </div>
+                </div>
+                <div class="checkbox-cluster">
+                    <p>
+                        <span>活用型</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-type', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-type', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-type" value="四段活用" checked> 四段活用</label>
+                        <label><input type="checkbox" class="filter-type" value="下二段活用" checked> 下二段活用</label>
+                        <label><input type="checkbox" class="filter-type" value="下一段活用" checked> 下一段活用</label>
+                        <label><input type="checkbox" class="filter-type" value="上二段活用" checked> 上二段活用</label>
+                        <label><input type="checkbox" class="filter-type" value="上一段活用" checked> 上一段活用</label>
+                        <label><input type="checkbox" class="filter-type" value="サ行変格活用" checked> サ行変格活用</label>
+                        <label><input type="checkbox" class="filter-type" value="ラ行変格活用" checked> ラ行変格活用</label>
+                        <label><input type="checkbox" class="filter-type" value="ク活用" checked> ク活用</label>
+                        <label><input type="checkbox" class="filter-type" value="シク活用" checked> シク活用</label>
+                        <label><input type="checkbox" class="filter-type" value="ナリ活用" checked> ナリ活用</label>
+                        <label><input type="checkbox" class="filter-type" value="タリ活用" checked> タリ活用</label>
+                        <label><input type="checkbox" class="filter-type" value="ー" checked> なし(ー)</label>
+                    </div>
+                </div>
+                <div class="checkbox-cluster">
+                    <p>
+                        <span>活用形</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-form', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-form', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-form" value="未然形" checked> 未然形</label>
+                        <label><input type="checkbox" class="filter-form" value="連用形" checked> 連用形</label>
+                        <label><input type="checkbox" class="filter-form" value="終止形" checked> 終止形</label>
+                        <label><input type="checkbox" class="filter-form" value="連体形" checked> 連体形</label>
+                        <label><input type="checkbox" class="filter-form" value="命令形" checked> 命令形</label>
+                        <label><input type="checkbox" class="filter-form" value="ー" checked> なし(ー)</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-cluster w-double">
+                    <p>
+                        <span>種別</span>
+                        <span class="bulk-actions">
+                            <span onclick="setCheckboxes('filter-kind', true)">すべて選択</span>｜<span onclick="setCheckboxes('filter-kind', false)">すべて解除</span>
+                        </span>
+                    </p>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" class="filter-kind" value="1 古典散文作品（特に、冒頭部分など有名な一節）" checked> 古典散文作品</label>
+                        <label><input type="checkbox" class="filter-kind" value="6 国歌、愛唱歌、（まれに）流行歌" checked> 国歌・愛唱歌・流行歌</label>
+                        <label><input type="checkbox" class="filter-kind" value="8 ことわざ、故事成句" checked> ことわざ・故事成句</label>
+                        <label><input type="checkbox" class="filter-kind" value="9 本・映画等の表題、新聞・雑誌の見出し等" checked> 本・映画・見出し等</label>
+                        <label><input type="checkbox" class="filter-kind" value="10 慣用句、定型表現等" checked> 慣用句・定型表現等</label>
+                        <label><input type="checkbox" class="filter-kind" value="ー" checked> なし(ー)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button type="button" id="searchBtn">検索を実行</button>
+            </div>
+        </div>
+    </div>
+
+    <h2>📋 データ一覧（クリックでソート可能）</h2>
+    <div class="table-wrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('date')">用例追加日<span id="arrow-date" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('word')">語句<span id="arrow-word" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('mainCat')">大分類<span id="arrow-mainCat" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('part')">品詞<span id="arrow-part" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('style')">形式<span id="arrow-style" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('type')">活用型<span id="arrow-type" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('form')">活用形<span id="arrow-form" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('meaning')">意味・用法<span id="arrow-meaning" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('kind')">種別<span id="arrow-kind" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('note')">備考<span id="arrow-note" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('title')">タイトル<span id="arrow-title" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('artist')">アーティスト名<span id="arrow-artist" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('year')">公開年<span id="arrow-year" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('creator')">作詞者・作者<span id="arrow-creator" class="sort-arrow"></span></th>
+                    <th onclick="sortTable('research')">先行研究<span id="arrow-research" class="sort-arrow"></span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const database = [
+        { 
+            date: "2025/10/28", word: "言わんとすることはわかる", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "言わんとすることはわかる", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "いざ行かん", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "いざ行かん", mainCat: "1 文法", part: "動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "至りて", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "木に縁りて魚を求む", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2026/07/10", word: "天に仰ぎて唾す", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "「諸人こぞりて」", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連用形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "讃美歌", title: "諸人こぞりて", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "恥ずべき", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "恥ずべき", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "巨星墜つ", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "巨星墜つ", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "人名：のぶ", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "憂うる", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "人名：みつる", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "落つれば同じ谷川の水", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "礼も過ぐれば無礼になる", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "◯◯に落ちよ　例：地獄", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○現る  例：天才、怪獣", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "樋口・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○求む 例：経験者、挑戦者、志願者", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "樋口・三浦・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "恐るべし", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "恐るべし", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "○○に告ぐ 例：犯人、国民、汝ら", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "初心忘るべからず", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "初心忘るべからず", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "初心忘るべからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "初心忘るべからず", mainCat: "1 文法", part: "助詞", style: "を(格助詞)", type: "ー", 
+            form: "ー", meaning: "「を」目的格非表出", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "芸は身を助く", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "人名：おさむ、つとむ、ながる、たすく、すぐる", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "樋口・三浦"
+        },
+        { 
+            date: "2025/10/28", word: "明くる日", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "樋口・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "恐るるに足らず", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "恐るるに足らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "天高く馬肥ゆる秋", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "天高く馬肥ゆる秋", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "勝って兜の緒を締めよ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "命令形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "○○を捧げよ 例：身、愛、心臓", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "出でよ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "時経れば", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "捧ぐ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "燃ゆ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2026/07/10", word: "見ゆ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "将を射んと欲すればまず馬を射よ", mainCat: "1 文法", part: "動詞", style: "ー", type: "上一段活用", 
+            form: "命令形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "将を射んと欲すればまず馬を射よ", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "この人を見よ", mainCat: "1 文法", part: "動詞", style: "ー", type: "上一段活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○せねば 例：注意、確認", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○せねば 例：注意、確認", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○すべき 例：認識、愛、謝罪、注目、発言、課", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○すべき 例：認識、愛、謝罪、注目、発言、課", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○を制す 例：勝負、天下　「○○を制する者は○○を制す」「毒をもって毒を制す」", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "万事休す", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○せよ  例：謝罪、和解、撤回、注意", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "貧すれば鈍す", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "先んずれば人を制す", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "君子豹変す", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "若い頃の苦労は買ってでもせよ", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○あり 　例：問題、笑い、涙、効果、訳、難、駐車場 「何でもあり」", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・"
+        },
+        { 
+            date: "2025/10/28", word: "あり？なし？", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "あり？なし？", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "待てば海路の日和あり", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "一年の計は元旦にあり", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "壁に耳あり障子に目あり", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "死ぬる子は眉目よし", mainCat: "1 文法", part: "動詞", style: "ー", type: "ナ行変格活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "死ぬる子は眉目よし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "少なからず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "少なからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "良からぬ○○ 例：うわさ、計画、思い、考え", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "良からぬ○○ 例：うわさ、計画、思い、考え", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "浅からぬ○○ 例：因縁、縁、傷", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "浅からぬ○○ 例：因縁、縁、傷", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "若かりし頃", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・劉・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "若かりし頃", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・劉・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○なし        例：考え、根拠、底、返事、異常、指定、お咎め、収穫、容赦", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・樋口・深澤・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○なし        例：考え、根拠、底、返事、異常、指定、お咎め、収穫、容赦", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・樋口・深澤・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○良し 　　　例：味、三方 「良しとする」　「よしよし」", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○良し 　　　例：味、三方 「良しとする」　「よしよし」", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井24"
+        },
+        { 
+            date: "2025/10/28", word: "待ったなし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇狭し       例：道幅、幅員　　「所狭しと並ぶ」", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇狭し       例：道幅、幅員　　「所狭しと並ぶ」", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "○○多し 例：事故、学童", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "○○多し 例：事故、学童", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "備えあれば憂いなし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "やむなし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "宇野"
+        },
+        { 
+            date: "2025/10/28", word: "良薬は口に苦し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "時すでに遅し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "帯に短したすきに長し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "灯台下暗し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水"
+        },
+        { 
+            date: "2025/10/28", word: "死人に口なし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "触らぬ神に祟り無し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "触らぬ神に祟り無し", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "少年老い易く学成り難し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "終わり良ければ全て良し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "案ずるより産むが易し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "案ずるより産むが易し", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "世界広しといえども", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "潔しとしない", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ペンは剣よりも強し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "青は藍より出でて藍より青し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "人名：たかし、たけし、つよし、ふとし、やすし、さとし、きよし、ひろし、あつし、-よし、-とし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "樋口・髙﨑"
+        },
+        { 
+            date: "2025/10/28", word: "良き○○ 例：日、友、理解者", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "若き○○ 例：エース、男　　　　　　「うら若き」", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "亡き○○ 　　　　　例：父、母、祖父、祖母　「今は亡き」　　", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "古き良き○○ 例：時代、日本", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒・文化庁・劉"
+        },
+        { 
+            date: "2025/10/28", word: "飽くなき○○ 例：追求、戦い", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "名もなき○○ 例：人、仕事、歌", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "仁義なき○○ 例：戦い", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "終わりなき○○ 例：旅、戦い", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "幼き○○ 例：日、人", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "誇り高き○○ 例：人々", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "～がたき 例：忘れ‐、得‐、耐え‐", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "比類なき○○ 例：才能、作品", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "老いも若きも", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "果てなき○○ 例：空、旅", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "憎き○○ 例：相手", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "長きに渡る○○ 　例：戦い、戦争  「長きに渡って」　", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "罪深き○○ 例：人、男、女", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "悪名高き○○ 例：男、女、王", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "いわれなき○○ 例：中傷、差別", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "完膚なきまで", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "やんごとなき", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井24"
+        },
+        { 
+            date: "2025/10/28", word: "事なきを得た", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "紛うことなき", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "実り多き○○ 例：人生、時間、一年、一日、瞬間", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "道なき道", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "国境なき医師団", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "穢れなき○○ 例：子ども", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "狭き○○ 例：門、道、堂宇", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒・劉"
+        },
+        { 
+            date: "2025/10/28", word: "曇りなき○○ 例：眼、心、空", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "故きを温ねて新しきを知る", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "お忘れなきように", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "君子危うきに近寄らず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・押井"
+        },
+        { 
+            date: "2025/10/28", word: "君子危うきに近寄らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・押井"
+        },
+        { 
+            date: "2025/10/28", word: "易きに流れる", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "弱きを助け、強きをくじく", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "多かれ少なかれ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "良かれと思って", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "遅かれ早かれ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "～ことなかれ 例：迷う‐", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "驚くなかれ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "事なかれ主義", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "鶏口となるも牛後となるなかれ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "命令形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "多からず少なからず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "多からず少なからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "高からず低からず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "高からず低からず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "あたらずとも遠からず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "あたらずとも遠からず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "あたらずとも遠からず", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "悪しからず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "悪しからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "良し悪し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "良し悪し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "うらめしや", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "宇野・金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "人名：ただし、ひさし、ひとし、まさし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "三浦・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "美しき○○ 例：花、世界、人", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "素晴らしき○○ 例：世界", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "宇野・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "悲しき○○ 例：事態", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "麗しき○○ 例：人々　　　　　　「見目麗しき」", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "思しき○○ 例：人物、人、男 「犯人と思しき」　　　　", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "由緒正しき○○ 例：家柄", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "楽しき○○ 例：日々", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保"
+        },
+        { 
+            date: "2025/10/28", word: "悪しき○○ 例：風習、考え", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒・押井"
+        },
+        { 
+            date: "2025/10/28", word: "輝かしき○○ 例：経歴、業績、記録", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "由々しき○○ 例：事態", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "奥ゆかしき○○ 例：日本文化", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "嬉しき○○ 例：事態", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "親しき仲にも礼儀あり", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "親しき仲にも礼儀あり", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "疑わしきは罰せず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "疑わしきは罰せず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "良きにつけ悪しきにつけ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "シク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "良きにつけ悪しきにつけ", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "事実は小説よりも奇なり", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "さらなる", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "華麗なる○○ 例：変身、一族", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒"
+        },
+        { 
+            date: "2025/10/28", word: "新たなる○○ 例：希望、野望、世界", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "聖なる○○ 例：力、夜、剣", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "大いなる○○ 例：期待、力、野望", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "静かなる○○ 例：人、男", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "三浦"
+        },
+        { 
+            date: "2025/10/28", word: "完全なる○○ 例：誤解、誤謬、間違い", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "多大なる○○ 例：ご迷惑、ご協力", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "偉大なる○○ 例：発明、父", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "親愛なる○○ 例：あなた、友", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "遥かなる○○ 例：世界、星", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "尾山"
+        },
+        { 
+            date: "2025/10/28", word: "未知なる○○ 例：世界、場所", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "厳正なる○○ 例：抽選、選考", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "絶大なる○○ 例：人気、協力", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "似て非なる○○ 例：もの、考え、人", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "切なる○○ 例：思い、願い", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "稀なる○○ 例：人、研究", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "壮大なる○○ 例：話、物語", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "巨大なる○○ 例：もの、森", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "健全なる○○ 例：精神、身体", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "勇敢なる○○ 例：人、男", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "善なる○○ 例：もの、意志、人間", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "永遠なれ", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "健やかなる", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "ナリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "確固たる○○ 例：決意、信念", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "微々たる○○ 例：もの、存在", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "錚々たる○○ 例：顔ぶれ、メンバー", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "最たる○○ 例：もの、例", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "堂々たる○○ 例：姿、顔つき", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "確たる○○ 例：証拠、保証", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "純然たる○○ 例：事実、詐欺", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "断固たる○○ 例：決意、態度、意志、改革", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "冠たる○○ 例：研究、作品　　「世界に冠たる」　", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "暗澹たる○○ 例：気持ち、思い", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "荒涼たる○○ 例：世界、野原", mainCat: "1 文法", part: "形容動詞", style: "ー", type: "タリ活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "知らぬが仏", mainCat: "1 文法", part: "助動詞", style: "ぬ", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "逃げるが勝ち", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言・一段化後", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "負けるが勝ち", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言・一段化後", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "当たるも八卦当たらぬも八卦", mainCat: "1 文法", part: "助動詞", style: "ぬ", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2025/10/28", word: "当たるも八卦当たらぬも八卦", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2025/10/28", word: "言うは易し行うは難し", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "言うは易し行うは難し", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "言わぬが花", mainCat: "1 文法", part: "助動詞", style: "ぬ", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "聞くは一時の恥聞かぬは一生の恥", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "聞くは一時の恥聞かぬは一生の恥", mainCat: "1 文法", part: "助動詞", style: "ぬ", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "見ると聞くとは大違い", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "ならぬ堪忍するが堪忍", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "遅きに失した", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2025/10/28", word: "飛ぶがごとく", mainCat: "1 文法", part: "動詞", style: "ー", type: "四段活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "準体言", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2026/07/10", word: "思えば思わるる", mainCat: "1 文法", part: "助動詞", style: "る", type: "ー", 
+            form: "連体形", meaning: "受身", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2026/07/10", word: "無理をなされぬように", mainCat: "1 文法", part: "助動詞", style: "る", type: "ー", 
+            form: "連用形", meaning: "尊敬", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2026/07/10", word: "しばし待たれよ", mainCat: "1 文法", part: "助動詞", style: "る", type: "ー", 
+            form: "命令形", meaning: "尊敬", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2026/07/10", word: "死せる孔明生ける仲達を走らす", mainCat: "1 文法", part: "助動詞", style: "す", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: ""
+        },
+        { 
+            date: "2026/07/10", word: "可愛い子には旅をさせよ", mainCat: "1 文法", part: "助動詞", style: "す", type: "ー", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "古代語では不自然", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "知らしめた　　　　　　　　　　　　　　　　「世に知らしめた」", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "言わしめる　　　　　　「彼をして天才と言わしめるほど」", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "たらしめる　　　　　　　　　　　　「民が王を王たらしめる」", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保"
+        },
+        { 
+            date: "2025/10/28", word: "たらしめる　　　　　　　　　　　　「民が王を王たらしめる」", mainCat: "1 文法", part: "助動詞", style: "たり（断定）", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保"
+        },
+        { 
+            date: "2025/10/28", word: "至らしめる　　　　　　　　　　　　　　　「死に至らしめる病」", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "○○せしめる 例：成立、向上、成就、自覚", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保"
+        },
+        { 
+            date: "2025/10/28", word: "心胆を寒からしめる", mainCat: "1 文法", part: "助動詞", style: "しむ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "心胆を寒からしめる", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "～ずじまい 例：食べ‐、使わ‐", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "思わず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "○○を問わず 例：年齢、性別", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○知らず  例：世間、恥、恩、怖いもの 「親知らず」", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "○○にもかかわらず　例：子ども、大人、専門外", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "相変わらず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "やむを得ず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "思いがけず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "意図せず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "役立たず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "人知れず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "言葉足らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "ままならず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "数知れず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ならず者", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "開かずの○○ 例：扉、部屋、間、踏切", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "いざ知らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "舌足らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ものともせず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "我関せず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "百聞は一見に如かず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "後悔先に立たず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "寸分違わず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "つゆ知らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤・劉"
+        },
+        { 
+            date: "2025/10/28", word: "向こう見ず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ローマは一日にして成らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "覆水盆に返らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "木を見て森を見ず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "天網恢恢疎にして漏らさず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "井の中の蛙大海を知らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "二兎追うものは一兎も得ず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "三浦"
+        },
+        { 
+            date: "2025/10/28", word: "弘法筆を選ばず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "悪銭身につかず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "歳月人を待たず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "虻蜂取らず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "知られざる〇〇 例：過去、素顔", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "〜ざるを得ない 例：言わ‐、聞か‐", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・大久保・金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "見えざる○○ 例：敵、手", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "持たざる○○ 例：者　「持てる者持たざる者」", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "見ざる聞かざる言わざる　", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "招かれざる○○ 例：客、男", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒・押井・文化庁"
+        },
+        { 
+            date: "2025/10/28", word: "偽らざる○○ 例：心境　", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "思わぬ○○　　　例：人物、発見、出会い、展開、ところ", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "見知らぬ○○ 例：人、男、客", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "変わらぬ○○ 例：味、魅力、恰好、製法", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "予期せぬ○○ 例：人物、発見、出会い", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "知らぬ間に", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "見てみぬふり", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "並々ならぬ○○ 例：決意", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "ただならぬ○○ 例：雰囲気、顔", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "叶わぬ○○ 例：夢、恋", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "知らん顔", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "知らぬ顔", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "あらぬ○○ 例：言いがかり、方向、事", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "たゆまぬ○○ 例：努力、活動", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "動かぬ○○ 例：証拠", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "何食わぬ○○ 例：顔、そぶり　", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "転ばぬ先の杖", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "帰らぬ人", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ままならぬ○○ 例：ご時世", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "歯に衣着せぬ", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "目にも止まらぬ○○　例：早業", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒"
+        },
+        { 
+            date: "2025/10/28", word: "得も言われぬ", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・文化庁・劉"
+        },
+        { 
+            date: "2025/10/28", word: "知らぬ存ぜぬ", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "蒔かぬ種は生えぬ　", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "捕らぬ狸の皮算用", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "火のない所に煙は立たぬ", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "鬼の居ぬ間に洗濯", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "～ねばならない 例：買わ‐、食べ‐", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・大久保・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "武士は食わねど高楊枝", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "武士は食わねど高楊枝", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "～ず…ず　　例：見‐知ら‐、負け‐劣ら‐、飲ま‐食わ‐、鳴か‐飛ば‐、あわて‐騒が‐、知ら‐知ら‐", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "ー", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・劉"
+        },
+        { 
+            date: "2026/07/10", word: "～ずに　「何も持たずに」", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "思いきや", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・前田"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇ありき 例：結論、存在、言葉　　　　　　　", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・石黒・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "在りし日", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田"
+        },
+        { 
+            date: "2025/10/28", word: "選ばれし者", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "古代語では不自然", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉・尾山"
+        },
+        { 
+            date: "2025/10/28", word: "秘められし○○ 例：力、思い", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "古代語では不自然", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "来し方", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田"
+        },
+        { 
+            date: "2025/10/28", word: "聞きしに勝る", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "○○によりけり 例：答え、金額、人", mainCat: "1 文法", part: "助動詞", style: "けり", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2026/07/10", word: "遅かりし由良之助", mainCat: "1 文法", part: "助動詞", style: "き", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "色男金と力はなかりけり", mainCat: "1 文法", part: "助動詞", style: "けり", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "～つ…つ 　例：持ち‐持たれ‐、行き‐戻り‐、矯め‐眇め‐、組ん‐解れ‐、追い‐追われ‐、抜き‐抜かれ‐", mainCat: "1 文法", part: "助動詞", style: "つ", type: "ー", 
+            form: "ー", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "さもありなん", mainCat: "1 文法", part: "助動詞", style: "ぬ", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水"
+        },
+        { 
+            date: "2025/10/28", word: "さもありなん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水"
+        },
+        { 
+            date: "2026/07/10", word: "風と共に去りぬ", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "9 本・映画等の表題、新聞・雑誌の見出し等", note: "ー", title: "風と共に去りぬ", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2026/07/10", word: "やんぬるかな", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・金水"
+        },
+        { 
+            date: "2025/10/28", word: "してやったり", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "敗れたり", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "したり顔", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "下手の考え休むに似たり", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "秘めたる○○ 例：思い、パワー、力", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "勝手知ったる", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "さしたる○○ 例：証拠、根拠", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "過ぎたるは猶及ばざるが如し", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "過ぎたるは猶及ばざるが如し", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "準体言", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "過ぎたるは猶及ばざるが如し", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "～たり…たり 例：行っ‐来‐、踏ん‐蹴っ‐、似‐よっ‐、願っ‐かなっ‐", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "ここに極まれり", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "○○における 例：大学、分野", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "持てる〇〇 例：力、国　　　「持てる力のすべて」", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田"
+        },
+        { 
+            date: "2025/10/28", word: "眠れる〇〇 例：街、獅子", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・樋口23・尾山"
+        },
+        { 
+            date: "2025/10/28", word: "悩める〇○ 例：女性、男性", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "迷える〇〇 例：子羊", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田・劉"
+        },
+        { 
+            date: "2025/10/28", word: "生ける〇〇 例：屍　　　　　「生きとし生けるもの」", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "怒れる〇〇 例：母たち、男", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田・劉"
+        },
+        { 
+            date: "2025/10/28", word: "なせる〇〇 例：技、業、味　「神のなせる業」「偶然のなせる技」", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "病める〇○ 例：とき、精神", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "富める○○ 例：とき", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "至れり尽くせり", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "終止形", meaning: "並列", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・樋口23"
+        },
+        { 
+            date: "2026/07/10", word: "見破ったり", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "討ち取ったり", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "終止形", meaning: "", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "果たせるかな", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "連体形", meaning: "", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "いかんせん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "いかにせむ", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "あらん限り", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井"
+        },
+        { 
+            date: "2025/10/28", word: "～んばかり 例：言わ‐、泣か‐、割れん‐", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保・劉"
+        },
+        { 
+            date: "2025/10/28", word: "～んがため 例：買わ‐、言わ‐", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "～んほど 例：こぼれ‐", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2026/07/10", word: "求めよ。さらば与えられん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "さすれば道は開かれん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "勝利をもたらさん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "神のご加護があらんことを", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "寄らば斬らん", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "～べからず　　　　例：入る‐、立ち入る‐　「べからず集」", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保・三浦・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "～べからず　　　　例：入る‐、立ち入る‐　「べからず集」", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保・三浦・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "～べからざる　例：欠く‐、許す‐　「あり得べからざる」", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "～べからざる　例：欠く‐、許す‐　「あり得べからざる」", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・劉"
+        },
+        { 
+            date: "2025/10/28", word: "働かざるもの食うべからず", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒"
+        },
+        { 
+            date: "2025/10/28", word: "働かざるもの食うべからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒"
+        },
+        { 
+            date: "2025/10/28", word: "働かざるもの食うべからず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "石黒"
+        },
+        { 
+            date: "2025/10/28", word: "～べく 例：調査する‐、考える‐", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・押井"
+        },
+        { 
+            date: "2025/10/28", word: "なるべく", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "～べし 例：始める‐、やる‐", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "推して知るべし", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "～べき 例：食べる‐、買う‐、行く‐", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "あるべき○○ 例：姿、場所", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "しかるべき〇〇 例：対処、処置", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保・劉"
+        },
+        { 
+            date: "2026/07/10", word: "～べくして　「勝つべくして勝つ」", mainCat: "1 文法", part: "助動詞", style: "べし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・劉"
+        },
+        { 
+            date: "2025/10/28", word: "負けじと", mainCat: "1 文法", part: "助動詞", style: "じ", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "三浦・劉・尾山"
+        },
+        { 
+            date: "2025/10/28", word: "忘れじ", mainCat: "1 文法", part: "助動詞", style: "じ", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "人は動かじ（山本五十六）", mainCat: "1 文法", part: "助動詞", style: "じ", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "～まじ  例：許す‐、忘る‐", mainCat: "1 文法", part: "助動詞", style: "まじ", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "あるまじき〇〇 例：事態、行為、状況", mainCat: "1 文法", part: "助動詞", style: "まじ", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇されたし 例：返信、確認、参照、注意", mainCat: "1 文法", part: "助動詞", style: "たし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "大久保・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "来られたし", mainCat: "1 文法", part: "助動詞", style: "たし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2026/07/10", word: "あらまほしきもの", mainCat: "1 文法", part: "助動詞", style: "まほし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/07/10", word: "かくありたきもの", mainCat: "1 文法", part: "助動詞", style: "たし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○のみならず 例：筆者、我々", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・劉"
+        },
+        { 
+            date: "2025/10/28", word: "○○のみならず 例：筆者、我々", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・劉"
+        },
+        { 
+            date: "2025/10/28", word: "情けは人の為ならず", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・前田"
+        },
+        { 
+            date: "2025/10/28", word: "情けは人の為ならず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・前田"
+        },
+        { 
+            date: "2025/10/28", word: "○○ならざるもの 例：人、神", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○ならざるもの 例：人、神", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇なりとも 例：多少、一度、一時", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "継続は力なり", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "大なり…「＞」のこと", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "小なり…「＜」のこと", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "大なり小なり", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "時は金なり", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・深澤・劉"
+        },
+        { 
+            date: "2025/10/28", word: "本日は晴天なり", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "煮るなり焼くなり", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "単なる", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇なるもの　　　　　　　　　○○には固有名詞が入る", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "母なる大地", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "好きこそものの上手なれ", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "已然形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・樋口・深澤・劉"
+        },
+        { 
+            date: "2025/10/28", word: "好きこそものの上手なれ", mainCat: "1 文法", part: "助詞", style: "こそ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係結び", kind: "8 ことわざ、故事成句", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・樋口・深澤・劉"
+        },
+        { 
+            date: "2026/07/10", word: "かくなる上は", mainCat: "1 文法", part: "助動詞", style: "なり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○たらん　例：救世主、紳士　「救世主たらんことを」", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "たらむ", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "○○たらん　例：救世主、紳士　「救世主たらんことを」", mainCat: "1 文法", part: "助動詞", style: "む", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "たらむ", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "○○たりうる 例：人、教師、政治家", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○たりうる 例：人、教師、政治家", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇たりとも 例：一歩、一度、何人", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇たりとも 例：一歩、一度、何人", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "主たる○○ 例：原因、目的", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇たるもの 例：教師、男、指導者、市民、主君", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "長たる○○ 例：者、裁判官", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇たるや 例：姿、表情、驚き、喜び", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "何たる", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○たる所以 例：人間、王　「王の王たる所以」", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇たれ 例：誠実、リーダー", mainCat: "1 文法", part: "助動詞", style: "たり(断定)", type: "ー", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "例のごとく", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "読んで字のごとく", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "烈火のごとく", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "光陰矢のごとし", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "〇〇ごとき 例：お前、私、自分、一般人", mainCat: "1 文法", part: "助動詞", style: "ごとし", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "我が○○ 例：国、身、名、道", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "連体修飾格", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水"
+        },
+        { 
+            date: "2025/10/28", word: "○○がごとく 例：湯水", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "連体修飾格", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○がごとく 例：湯水", mainCat: "1 文法", part: "助詞", style: "ごとし", type: "ー", 
+            form: "連用形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "雨(が)降って地(が)固まる", mainCat: "1 文法", part: "助詞", style: "が(格助詞)", type: "ー", 
+            form: "ー", meaning: "「が」主格非表出", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "頭(を)隠して尻(を)隠さず", mainCat: "1 文法", part: "助詞", style: "を(格助詞)", type: "ー", 
+            form: "ー", meaning: "「を」目的格非表出", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "頭(を)隠して尻(を)隠さず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "李下に冠を正さず", mainCat: "1 文法", part: "助詞", style: "に(格助詞)", type: "ー", 
+            form: "ー", meaning: "場所", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "李下に冠を正さず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "平素より", mainCat: "1 文法", part: "助詞", style: "より(格助詞)", type: "ー", 
+            form: "ー", meaning: "「より」時間", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "○○にて 例：メール、自宅", mainCat: "1 文法", part: "助詞", style: "にて(格助詞)", type: "ー", 
+            form: "ー", meaning: "「にて」場所・手段", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "二人して", mainCat: "1 文法", part: "助詞", style: "して(格助詞)", type: "ー", 
+            form: "ー", meaning: "「して」", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "たとえば", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "上村・押井24 "
+        },
+        { 
+            date: "2025/10/28", word: "たとえば", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "已然形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "上村・押井24 "
+        },
+        { 
+            date: "2025/10/28", word: "言わば", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "あわよくば", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "隙あらば", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "隙あらば", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "未然形", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "急がば回れ", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・深澤・劉・飯倉"
+        },
+        { 
+            date: "2025/10/28", word: "虎穴に入らずんば虎子を得ず", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "虎穴に入らずんば虎子を得ず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "人を呪わば穴二つ", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・深澤・劉"
+        },
+        { 
+            date: "2025/10/28", word: "死なばもろとも", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "毒を食らわば皿まで", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "あらばこそ", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "あらばこそ", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "未然形", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "あらばこそ", mainCat: "1 文法", part: "助詞", style: "こそ(係助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "寄らば大樹の陰", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤・劉"
+        },
+        { 
+            date: "2025/10/28", word: "キジも鳴かずば撃たれまい", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "キジも鳴かずば撃たれまい", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "ー", meaning: "終止形", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "笑わば笑え", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "順接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "住めば都", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "恒常条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "風が吹けば桶屋が儲かる", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "恒常条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "為せば成る", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "恒常条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "勝てば官軍", mainCat: "1 文法", part: "助詞", style: "ば(接続助詞)", type: "ー", 
+            form: "ー", meaning: "恒常条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "言わずと知れた", mainCat: "1 文法", part: "助詞", style: "と(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "言わずと知れた", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "～とも 例：悪く‐、少なく‐、なく‐　「親はなくとも子は育つ」「何はなくとも」", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "～ずとも 例：食べ‐、言わ‐、せ‐", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "～ずとも 例：食べ‐、言わ‐、せ‐", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "～なくとも 例：食べ‐、言わ‐、会え‐", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ともあれ　　　　　　　「何はともあれ」", mainCat: "1 文法", part: "助詞", style: "とも(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接仮定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "といえど", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "されど", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "数あれど", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "待てど暮らせど", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "といえども", mainCat: "1 文法", part: "助詞", style: "ども(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・劉"
+        },
+        { 
+            date: "2026/07/10", word: "姿変われど心変わらず", mainCat: "1 文法", part: "助詞", style: "ど(接続助詞)", type: "ー", 
+            form: "ー", meaning: "逆接確定条件", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2026/07/10", word: "姿変われど心変わらず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "涙なしに語れない", mainCat: "1 文法", part: "助詞", style: "に(接続助詞)", type: "ー", 
+            form: "ー", meaning: "単純接続", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "涙なしに語れない", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "深澤"
+        },
+        { 
+            date: "2025/10/28", word: "～ずして… 例：食わ‐死ぬ、戦わ‐負ける", mainCat: "1 文法", part: "助詞", style: "して(接続助詞)", type: "ー", 
+            form: "ー", meaning: "単純接続", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "往々にして", mainCat: "1 文法", part: "助詞", style: "して(接続助詞)", type: "ー", 
+            form: "ー", meaning: "単純接続", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "船頭多くして船山に上る", mainCat: "1 文法", part: "助詞", style: "して(接続助詞)", type: "ー", 
+            form: "ー", meaning: "単純接続", kind: "8 ことわざ、故事成句", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "ならでは", mainCat: "1 文法", part: "助詞", style: "で(接続助詞)", type: "ー", 
+            form: "ー", meaning: "打消の接続", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治"
+        },
+        { 
+            date: "2025/10/28", word: "○○こそあれ 例：違い、差", mainCat: "1 文法", part: "助詞", style: "こそ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係結び", kind: "10 慣用句、定型表現等", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・深澤"
+        },
+        { 
+            date: "2025/10/28", word: "○○こそすれ 例：感謝、断り、恨み", mainCat: "1 文法", part: "助詞", style: "こそ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係結び", kind: "10 慣用句、定型表現等", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "前田・劉"
+        },
+        { 
+            date: "2025/10/28", word: "知る人ぞ知る", mainCat: "1 文法", part: "助詞", style: "ぞ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係結び", kind: "10 慣用句、定型表現等", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "文化庁・劉・押井24・"
+        },
+        { 
+            date: "2025/10/28", word: "神のみぞ知る", mainCat: "1 文法", part: "助詞", style: "ぞ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係結び", kind: "10 慣用句、定型表現等", note: "係結び", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "たそがれ", mainCat: "1 文法", part: "助詞", style: "ぞ(係助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "～や否や 例：帰る‐、食べる‐、入る", mainCat: "1 文法", part: "助詞", style: "や(係助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2026/07/10", word: "食うや食わず", mainCat: "1 文法", part: "助詞", style: "や(係助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2026/07/10", word: "食うや食わず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "～だに 例：思う‐、聞く‐、思い出す‐、想像する‐　「思うだに恐ろしい」", mainCat: "1 文法", part: "助詞", style: "だに(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "○○だにしない　　例：予想、微動、想像、一顧、夢想", mainCat: "1 文法", part: "助詞", style: "だに(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "さなきだに　", mainCat: "1 文法", part: "助詞", style: "だに(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2025/10/28", word: "必ずしも", mainCat: "1 文法", part: "助詞", style: "し(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "なきにしもあらず", mainCat: "1 文法", part: "助詞", style: "し(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "なきにしもあらず", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "準体言", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "なきにしもあらず", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水・押井・劉"
+        },
+        { 
+            date: "2025/10/28", word: "誰しも", mainCat: "1 文法", part: "助詞", style: "し(副助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井24"
+        },
+        { 
+            date: "2025/10/28", word: "言わずもがな", mainCat: "1 文法", part: "助詞", style: "もがな(終助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "文化庁・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "言わずもがな", mainCat: "1 文法", part: "助動詞", style: "ず", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "文化庁・樋口23"
+        },
+        { 
+            date: "2025/10/28", word: "さぞかし", mainCat: "1 文法", part: "助詞", style: "かし(終助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "これ見よがし", mainCat: "1 文法", part: "助詞", style: "かし(終助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "これ見よがし", mainCat: "1 文法", part: "動詞", style: "ー", type: "上二段活用", 
+            form: "命令形", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2025/10/28", word: "今や", mainCat: "1 文法", part: "助詞", style: "や(間投助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "必ずや", mainCat: "1 文法", part: "助詞", style: "や(間投助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "佐治・押井24"
+        },
+        { 
+            date: "2025/10/28", word: "かたや", mainCat: "1 文法", part: "助詞", style: "や(間投助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "劉"
+        },
+        { 
+            date: "2025/10/28", word: "なんぞや", mainCat: "1 文法", part: "助詞", style: "や(間投助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "押井"
+        },
+        { 
+            date: "2025/10/28", word: "意外や意外", mainCat: "1 文法", part: "助詞", style: "や(間投助詞)", type: "ー", 
+            form: "ー", meaning: "ー", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "金水"
+        },
+        { 
+            date: "2026/06/15", word: "僕たちを僕たちたらしめる証明になる", mainCat: "1 文法", part: "助動詞", style: "たり(完了)", type: "ー", 
+            form: "未然形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "シュガーソングとビターステップ", artist: "UNISON SQUARE GARDEN", year: "2015", creator: "田淵智也", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "稚拙が極まれり", mainCat: "1 文法", part: "助動詞", style: "り", type: "ー", 
+            form: "終止形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "シュガーソングとビターステップ", artist: "UNISON SQUARE GARDEN", year: "2015", creator: "田淵智也", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "か弱きオトメじゃ勝てないの", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ー", 
+            form: "連体形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "初恋サイダー", artist: "Buono!", year: "2012", creator: "NOBE", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "求愛性 孤独ドク 流るルル", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "ベノム(feat. flower)", artist: "かいりきベア", year: "2021", creator: "かいりきベア", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "マガイモノこそかなしけれ", mainCat: "1 文法", part: "助詞", style: "こそ(係助詞)", type: "ー", 
+            form: "ー", meaning: "係り結び", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "ギラギラ", artist: "Ado", year: "2021", creator: "てにをは", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "哀れ あはれ", mainCat: "2 語彙", part: "形容動詞", style: "あはれなり", type: "ー", 
+            form: "ー", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "オーバーライド", artist: "吉田夜世 feat. 重音テト", year: "2023", creator: "吉田夜世", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "東京木枯らし待ったなし", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "私のラミンタッチオーネ(Lamentazione)", artist: "モーニング娘。'25", year: "2025", creator: "つんく", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "至上の愛 悠久の帆に 穢れなき身を委ね", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "連体形", meaning: "ー", kind: "6 国歌、愛唱歌、（まれに）流行歌", note: "ー", title: "悲しみの向こうへ", artist: "いとうかなこ", year: "2005", creator: "KIRIKO", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "『夜は短し歩けよ乙女』", mainCat: "1 文法", part: "形容詞", style: "ー", type: "ク活用", 
+            form: "終止形", meaning: "ー", kind: "9 本・映画等の表題、新聞・雑誌の見出し等", note: "ー", title: "『夜は短し歩けよ乙女』", artist: "ー", year: "2006", creator: "森見登美彦", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "干上がる", mainCat: "1 文法", part: "動詞", style: "ー", type: "上一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "干からびる", mainCat: "1 文法", part: "動詞", style: "ー", type: "上一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "蹴上がる", mainCat: "1 文法", part: "動詞", style: "ー", type: "下一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "蹴落とす", mainCat: "1 文法", part: "動詞", style: "ー", type: "下一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "蹴鞠", mainCat: "1 文法", part: "動詞", style: "ー", type: "下一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "蹴ろ", mainCat: "1 文法", part: "動詞", style: "ー", type: "下一段活用", 
+            form: "連用形", meaning: "形態素", kind: "10 慣用句、定型表現等", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "日出処の天子", mainCat: "1 文法", part: "動詞", style: "ー", type: "下二段活用", 
+            form: "連体形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "敵は本能寺にあり", mainCat: "1 文法", part: "動詞", style: "ー", type: "ラ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        },
+        { 
+            date: "2026/06/15", word: "堂々退場す", mainCat: "1 文法", part: "動詞", style: "ー", type: "サ行変格活用", 
+            form: "終止形", meaning: "ー", kind: "1 古典散文作品（特に、冒頭部分など有名な一節）", note: "ー", title: "ー", artist: "ー", year: "ー", creator: "ー", research: "ー"
+        }
+    ];
+
+    let currentDisplayedData = [...database];
+    let sortDirections = {};
+
+    function setCheckboxes(className, checkState) {
+        const checkboxes = document.querySelectorAll(`.${className}`);
+        checkboxes.forEach(cb => { cb.checked = checkState; });
+        filterData(); 
+    }
+
+    function displayData(dataList) {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = ""; 
+
+        if (dataList.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 20px;">該当するデータが見つかりません。</td></tr>`;
+            return;
+        }
+
+        const rows = dataList.map(item => `
+            <tr>
+                <td>${item.date || "ー"}</td>
+                <td><strong>${item.word || "ー"}</strong></td>
+                <td>${item.mainCat || "ー"}</td>
+                <td>${item.part || "ー"}</td>
+                <td>${item.style || "ー"}</td>
+                <td>${item.type || "ー"}</td>
+                <td>${item.form || "ー"}</td>
+                <td>${item.meaning || "ー"}</td>
+                <td>${item.kind || "ー"}</td>
+                <td>${item.note || "ー"}</td>
+                <td>${item.title || "ー"}</td>
+                <td>${item.artist || "ー"}</td>
+                <td>${item.year || "ー"}</td>
+                <td>${item.creator || "ー"}</td>
+                <td>${item.research || "ー"}</td>
+            </tr>
+        `).join("");
+
+        tableBody.innerHTML = rows;
+    }
+
+    function sortTable(columnKey) {
+        const currentDirection = sortDirections[columnKey] === 'asc' ? 'desc' : 'asc';
+        sortDirections = { [columnKey]: currentDirection }; 
+
+        document.querySelectorAll('.sort-arrow').forEach(span => span.textContent = "");
+        const arrowSpan = document.getElementById(`arrow-${columnKey}`);
+        if (arrowSpan) {
+            arrowSpan.textContent = currentDirection === 'asc' ? ' ▲' : ' ▼';
+        }
+
+        currentDisplayedData.sort((a, b) => {
+            let valA = a[columnKey] || "";
+            let valB = b[columnKey] || "";
+
+            if ((valA === "ー" || valA === "") && valB !== "ー" && valB !== "") return 1;
+            if ((valB === "ー" || valB !== "") && valA !== "ー" && valA !== "") return -1;
+
+            if (columnKey === 'date') {
+                const timeA = new Date(valA).getTime() || 0;
+                const timeB = new Date(valB).getTime() || 0;
+                return currentDirection === 'asc' ? timeA - timeB : timeB - timeA;
+            }
+
+            const numA = String(valA).match(/^\d+/);
+            const numB = String(valB).match(/^\d+/);
+            if (numA && numB) {
+                return currentDirection === 'asc' 
+                    ? parseInt(numA[0], 10) - parseInt(numB[0], 10)
+                    : parseInt(numB[0], 10) - parseInt(numA[0], 10);
+            }
+
+            return currentDirection === 'asc'
+                ? String(valA).localeCompare(String(valB), 'ja')
+                : String(valB).localeCompare(String(valA), 'ja');
+        });
+
+        displayData(currentDisplayedData);
+    }
+
+    function matchAdvancedQuery(targetValue, queryStr) {
+        if (!queryStr) return true;
+        
+        targetValue = String(targetValue || "").toLowerCase();
+        const tokens = queryStr.toLowerCase().replace(/ /g, " ").split(" ").filter(t => t !== "");
+        
+        return tokens.every(token => {
+            let isExclude = false;
+            if (token.startsWith("-")) {
+                isExclude = true;
+                token = token.substring(1);
+                if (!token) return true;
+            }
+            
+            let escaped = token.replace(/[-\/\\^$+.{}[\]()|]/g, '\\$&');
+            escaped = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
+            
+            const regex = new RegExp(escaped);
+            const isMatch = regex.test(targetValue);
+            
+            return isExclude ? !isMatch : isMatch;
+        });
+    }
+
+    function matchYearRange(yearValue, fromStr, toStr) {
+        if (!fromStr && !toStr) return true;
+        if (yearValue === "ー" || !yearValue) return false;
+        const match = String(yearValue).match(/^\d+/);
+        if (!match) return false; 
+        const targetYear = parseInt(match[0], 10);
+        if (fromStr && targetYear < parseInt(fromStr, 10)) return false;
+        if (toStr && targetYear > parseInt(toStr, 10)) return false;
+        return true;
+    }
+
+    function filterData() {
+        document.querySelectorAll('.sort-arrow').forEach(span => span.textContent = "");
+        sortDirections = {};
+
+        const sWord = document.getElementById("s_word").value;
+        const sTitle = document.getElementById("s_title").value;
+        const sArtist = document.getElementById("s_artist").value;
+        const sYearFrom = document.getElementById("s_yearFrom").value;
+        const sYearTo = document.getElementById("s_yearTo").value;
+        const sCreator = document.getElementById("s_creator").value;
+
+        const checkedMain = Array.from(document.querySelectorAll('.filter-mainCat:checked')).map(cb => cb.value);
+        const checkedPart = Array.from(document.querySelectorAll('.filter-part:checked')).map(cb => cb.value);
+        const checkedStyle = Array.from(document.querySelectorAll('.filter-style:checked')).map(cb => cb.value);
+        const checkedType = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+        const checkedForm = Array.from(document.querySelectorAll('.filter-form:checked')).map(cb => cb.value);
+        const checkedKind = Array.from(document.querySelectorAll('.filter-kind:checked')).map(cb => cb.value);
+
+        currentDisplayedData = database.filter(item => {
+            const matchMain = checkedMain.includes(item.mainCat || "ー");
+            const matchPart = checkedPart.includes(item.part || "ー");
+            const matchStyle = checkedStyle.includes(item.style || "ー");
+            const matchType = checkedType.includes(item.type || "ー");
+            const matchForm = checkedForm.includes(item.form || "ー");
+            const matchKind = checkedKind.includes(item.kind || "ー");
+
+            const matchTxtWord = matchAdvancedQuery(item.word, sWord);
+            const matchTxtTitle = matchAdvancedQuery(item.title, sTitle);
+            const matchTxtArtist = matchAdvancedQuery(item.artist, sArtist);
+            const matchTxtCreator = matchAdvancedQuery(item.creator, sCreator);
+            const matchYear = matchYearRange(item.year, sYearFrom, sYearTo);
+
+            return matchMain && matchPart && matchStyle && matchType && matchForm && matchKind &&
+                   matchTxtWord && matchTxtTitle && matchTxtArtist && matchTxtCreator && matchYear;
+        });
+
+        displayData(currentDisplayedData);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        currentDisplayedData = [...database];
+        displayData(currentDisplayedData);
+
+        document.getElementById("searchBtn").addEventListener("click", filterData);
+
+        const inputContainer = document.getElementById("searchInputsContainer");
+        inputContainer.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                filterData();
+            }
+        });
+    });
+</script>
+<style>
+        .footer-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #005c82;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #444;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .footer-block {
+            grid-column: span 6;
+        }
+        @media (max-width: 768px) {
+            .footer-block {
+                grid-column: span 12;
+            }
+        }
+        .footer-section h3 {
+            font-size: 14px;
+            color: #005c82;
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+        .footer-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .footer-section li {
+            margin-bottom: 5px;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        .history-table td {
+            padding: 4px 8px;
+            border: none;
+            font-size: 12px;
+            white-space: normal; /* 折り返しを許可 */
+        }
+        .history-date {
+            width: 90px;
+            color: #666;
+            font-weight: bold;
+        }
+        .history-ver {
+            width: 50px;
+            color: #005c82;
+        }
+        .copyright {
+            text-align: center;
+            font-size: 11px;
+            color: #777;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .footer-section a {
+            color: #005c82;
+            text-decoration: underline;
+        }
+        .footer-section a:hover {
+            color: #004461;
+        }
+    </style>
+
+    <div class="footer-section">
+        <div class="footer-grid">
+            <div class="footer-block">
+                <h3>👤 制作者</h3>
+                <p style="margin: 0 0 15px 0;">
+                    <strong>制作者：</strong>安食次暁（2026/07/25現在、國學院大學大学院文学研究科 特待特別研究生）<br>
+                    <strong>研究者情報：</strong> <a href="https://researchmap.jp/t-ajiki" target="_blank" rel="noopener noreferrer">researchmap プロフィール</a>
+<ul>
+                   <li>安食次暁(2025)「『現代でも用いられる文語的表現』リスト作成の試み」『國學院大學文学研究科論集』52,國學院大學大学院文学研究科学生会.</li>
+</ul>
+
+                </p>
+
+                <h3>📚先行研究</h3>
+                <ul>
+ <li>庵功雄(2021)『留学生のための近代文語文入門―現代の日本と日本語を知るために―』スリーエーネットワーク.</li>
+<li>飯倉洋一(2020)「未来に活かす古典―「古典は本当に必要なのか」論争の総括と展望」荒木浩編『古典の未来学　Projecting Classicism』,文学通信.</li>
+<li>石黒圭(2016)『語彙力を鍛える』光文社新書.</li>
+<li>上村知己(2024)「例へば」『國語國字』222,國語問題協議會.</li>
+<li>宇野義方(1969)「どっこい生きている文語表現」『月刊文法』1-6,明治書院.</li>
+<li>大久保優子(1977)「現代日本語における文語的表現」『玉藻』13,フェリス女学院大学国文学会.</li>
+<li>押井德馬(2018)「口語に混ぜたい文語表現」『みんなのかなづかひ二〇一九』はなごよみ.</li>
+<li>押井德馬(2024)「文語體は生きてゐる」『國語國字』222,國語問題協議會.</li>
+<li>尾山慎(2024)“「ドラゴンクエスト」‐いにしえのことばに彩られし副題たち‐”,花鳥社 連載コラム「文字の窓 ことばの景色」 第24回 (インターネットサイト、2024年10月24日最終閲覧)　.</li>
+                    <li>金水敏(2006)“現代に生きる古典日本語”,2006日本語教育国際研究大会講演資料.(PDF、2024年10月30日最終閲覧)https://skinsui.cocolog-nifty.com/linguistics/files/CIJLE2006slide.pdf</li>
+<li>金水敏(20２１)「現代に生きる文語」『AJALT』44,国際日本語普及協会.</li>
+<li>佐治圭三(1975)「口語の中に現れる文語的表現」『国語シリーズ 別冊3 日本語と日本語教育(発音・表現編)』文化庁・国立国語研究所.</li>
+<li>髙﨑一郎(2024)「隱れ文語體を探せ」『國語國字』222,國語問題協議會.</li>
+<li>樋口敦士(2013)「『歴史的仮名遣い』と『文語表現』—古典授業導入時における意義を踏まえて— 」『早稲田大学国語教育研究　特集：国語科教科書の可能性 』33, 早稲田大学国語教育学会.</li>
+<li>樋口敦士(2023)『故事成語教材考』文学通信.</li>
+<li>深澤愛(2022)『現代日本語をちゃんと説明するための古典文法入門』.</li>
+<li>文化庁国語課(2019)“平成30年度「国語に関する世論調査」の結果について”(PDF、2024年10月24日最終閲覧).https://www.bunka.go.jp/tokei_hakusho_shuppan/tokeichosa/kokugo_yoronchosa/pdf/r1393038_02.pdf</li>
+<li>前田直子(2020)「現代に残る古典語」庵功雄・日高水穂・前田直子・山田敏弘・大和シゲミ『やさしい日本語のしくみ‐日本語学の基本‐ 改訂版』くろしお出版.</li>
+<li>三浦勝也(2014)『近代日本語と文語文-今なお息づく美しいことば』勉誠出版.</li>
+<li>劉志偉(2022)『学習経験者の視点から見た日本語教育文法』日中言語出版社.</li>
+
+                    
+                   
+                </ul>
+            </div>
+
+            <div class="footer-block">
+                <h3>🔄 バージョン情報・更新履歴</h3>
+                <p style="margin: 0 0 8px 0;"><strong>現在のバージョン：</strong> Ver 1.0.2（公開日: 2026年7月25日）</p>
+                
+                <table class="history-table">
+                    <tr>
+                        <td class="history-date">2026/07/10</td>
+                        <td class="history-ver">v1.0.2</td>
+                        <td>安食（2025）の表外データ追加。</td>
+                    </tr>
+                    <tr>
+                        <td class="history-date">2026/06/15</td>
+                        <td class="history-ver">v1.0.1</td>
+                        <td>楽曲の文語的表現データを追加。</td>
+                    </tr>
+                    <tr>
+                        <td class="history-date">2026/05/31</td>
+                        <td class="history-ver">v1.0.0</td>
+                        <td>初版作成。慣用句・定型表現を中心とした検索システムを構築。</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="copyright">
+            &copy; 2026 安食次暁. All Rights Reserved.
+        </div>
+    </div>
+</body>
+</html>
